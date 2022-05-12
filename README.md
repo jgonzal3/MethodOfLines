@@ -10,4 +10,4 @@ but it is relatively boring to build the file to print the correct graph.
 In the utils or DSS directory, there is the matlab files or the .h converted from matlab into c++. This file can be
 included in the headers of the c++ file. Some extra variables are there so no need to add two different .h files.
 
-In the CVS-ODT directory, all the cvs files that can be consulted.
+In the CSV-ODT directory, all the cvs files that can be consulted.
