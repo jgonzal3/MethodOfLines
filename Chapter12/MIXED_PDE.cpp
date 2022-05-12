@@ -115,47 +115,47 @@ double ua(double x, double t) {
 
 void mixed_pde_solution_CM (const array_type &u , array_type &ut , const double t/* t */){
 
-	double dx=(X_U-X_L)/(SIZE);
-	double dx2 = dx*dx;
+    double dx=(X_U-X_L)/(SIZE);
+    double dx2 = dx*dx;
 
-	array_type temp = u;
-	// Convert u() from the ODE solver in a matrix
+    array_type temp = u;
+    // Convert u() from the ODE solver in a matrix
     Eigen::MatrixXd b = Eigen::Map<Eigen::Matrix<double, SIZE, 1> >(temp.data());
 
-	Eigen::MatrixXd cm = Eigen::MatrixXd::Zero(SIZE, SIZE);
+    Eigen::MatrixXd cm = Eigen::MatrixXd::Zero(SIZE, SIZE);
     Eigen::MatrixXd x;
 
 
 	// Create the coefficient matrix in Eigen
 
-	for (int i=0; i<SIZE; i++) {
-		for (int j=0; j<SIZE; j++) {
-			if(i == j) {
-				cm(i,j) = (1.0-2.0/dx2);
-			}
-			else if (abs(i-j) == 1)
-			{
-				cm(i,j) = 1.0/dx2;
-			}
-		}
+    for (int i=0; i<SIZE; i++) {
+	for (int j=0; j<SIZE; j++) {
+	    if(i == j) {
+  	        cm(i,j) = (1.0-2.0/dx2);
+	    }
+	    else if (abs(i-j) == 1)
+	    {
+	        cm(i,j) = 1.0/dx2;
+	    }
 	}
+    }
 
 //  Solve the system of equations
-	if (fabs(cm.determinant()) < 1e-9) {
-		cout<<cm.determinant();
-		cout<<"Exiting as determinant of A is less than eps: ";
-		exit(0);
-	}
-	else {
+    if (fabs(cm.determinant()) < 1e-9) {
+ 	cout<<cm.determinant();
+	cout<<"Exiting as determinant of A is less than eps: ";
+	exit(0);
+    }
+    else {
     	x = cm.colPivHouseholderQr().solve(b);
-		//x = cm.fullPivLu().solve(b);
-	}
+	//x = cm.fullPivLu().solve(b);
+    }
 
-	// If you need to cast one matrix type into another, use the cast operator
-	// cast a matrix of floats with doubles vector
-	// Eigen::MatrixXf f = d.cast <float> ();
-	array_type vec(x.data(), x.data() + x.rows() * x.cols());
-	ut = vec;
+    // If you need to cast one matrix type into another, use the cast operator
+    // cast a matrix of floats with doubles vector
+    // Eigen::MatrixXf f = d.cast <float> ();
+    array_type vec(x.data(), x.data() + x.rows() * x.cols());
+    ut = vec;
 
 }
 
@@ -164,11 +164,11 @@ int main(int argc, char **argv) {
 
     using namespace boost::numeric::odeint;
 
-	array_type x(SIZE);
-	array_type u(SIZE);
-	//array_type ut(SIZE);
-	array_type y0(SIZE,0.0);
-	matrix_type cm(SIZE, y0);
+    array_type x(SIZE);
+    array_type u(SIZE);
+    //array_type ut(SIZE);
+    array_type y0(SIZE,0.0);
+    matrix_type cm(SIZE, y0);
 
 
     string fn= "/home/julio/temp/Mixed_PDE_"+ to_string(CASE) + "_"+to_string(NDSS) +".csv";
@@ -177,22 +177,20 @@ int main(int argc, char **argv) {
     out.open(fn); // append instead of overwrite
     out <<"t,";
 
-	double dx=(X_U-X_L)/(SIZE);
-	double L = (X_U - X_L);
+    double dx=(X_U-X_L)/(SIZE);
+    double L = (X_U - X_L);
 
-	// IC over the spatial grid
-	for (int i=0; i<SIZE; i++) {
-		// Initialise the spatial grid as uniform grid
-		x[i]=X_L + i*dx;
-		// Initial condition
-		u[i] = sin(M_PI*x[i]/L);
-		out<<x[i]<<",";
-	}
+    // IC over the spatial grid
+    for (int i=0; i<SIZE; i++) {
+	// Initialise the spatial grid as uniform grid
+	x[i]=X_L + i*dx;
+	// Initial condition
+	u[i] = sin(M_PI*x[i]/L);
+	out<<x[i]<<",";
+    }
 
     out<<"\n";
     out.close();
-
-
 
 /*	Equation (12.1) is first order in t and second order in x (through
  *                    3    2
@@ -210,10 +208,10 @@ int main(int argc, char **argv) {
 
 
     //
-	FuncPtr = mixed_pde_solution_CM;
-	//mixed_pde_solution_CM (u, ut, 1.0);
+    FuncPtr = mixed_pde_solution_CM;
+    //mixed_pde_solution_CM (u, ut, 1.0);
 
-	//cout<<ut;
+    //cout<<ut;
 
     //size_t steps = integrate( FuncPtr, y, 0.0 , 20.0, 0.1, streaming_observer( cout ));
     size_t steps = integrate( FuncPtr, u, 0.0 , 20.0 , 0.1, output_observer_append( fn ));
@@ -221,7 +219,7 @@ int main(int argc, char **argv) {
 
    //cout << "!!!Hello World!!! with " <<steps<< endl; // prints !!!Hello World!!!
 
-	return 0;
+    return 0;
 }
 
 array_type operator*(const array_type& op1, const array_type& op2)
@@ -263,7 +261,7 @@ ostream& operator<<(ostream& os, const array_type& a)
 ostream& operator<<(ostream& os, const matrix_type & mat)
 //void printMatrix(matrix_type vect )
 {
-	cout<<"Calling print function \n";
+    cout<<"Calling print function \n";
 
     for (vector<double> vect1D : mat)
     {
@@ -283,24 +281,19 @@ ostream& operator<<(ostream& os, const matrix_type & mat)
 ostream& operator<<(ostream& os, const matrix3D_type & mat) {
 
 
-	  for(int k=0;k<mat.size();k++)
-	  {
-	    for(int i=0;i<mat[k].size();i++)
-	    {
-	      for(int j=0;j<mat[k][i].size();j++)
-	      {
+  for(int k=0;k<mat.size();k++)  {
+        for(int i=0;i<mat[k].size();i++) {
+            for(int j=0;j<mat[k][i].size();j++) {
 	        cout<<mat[i][j][k]<<" ";
-	      }
-	      cout<<endl;
 	    }
-	    cout<<endl;
-	  }
+	cout<<endl;
+	    }
+	cout<<endl;
+  }
 //
 //
 //	for(vector<vector<double>> i : mat) {
-//
 //		for(vector<double> j: i) {
-//
 //			for(double k: j) {
 //				cout<<k<<" ";
 //			}
@@ -308,8 +301,7 @@ ostream& operator<<(ostream& os, const matrix3D_type & mat) {
 //		}
 //		cout<<endl;
 //  	}
-
-    return os;
+  return os;
 
 }
 
