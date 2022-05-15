@@ -8,7 +8,7 @@
 #include "CONSTANTS.hpp"
 
 #include "dssCPP.h"
-#define NDSS 44
+#define NDSS 6
 
 using namespace std;
 
@@ -206,7 +206,7 @@ void difussion_pde_solution (const array_type &u , array_type &ut , const double
 		}
 	}
 
-	//2D to 1D matricesNR+NZ+
+	//2D to 1D matrices
 	for (int i=0; i<NZ; i++) {
 		for (int j=0; j<NR; j++) {
 			int ij= i*NR+j;
@@ -217,6 +217,149 @@ void difussion_pde_solution (const array_type &u , array_type &ut , const double
 
 	//cout<<ut;
 
+}
+
+array_type extract_column(matrix_type a, int pos) {
+	array_type ret(NR,0.0);
+
+	for (int k=0; k<NR; k++)
+		ret[k] = a[k][pos];
+	return (ret);
+
+}
+
+void difussion_pde_solution_highOrder (const array_type &u , array_type &ut , const double t/* t */){
+
+	array_type y0(NR);
+	array_type r(NR);
+	array_type z(NZ);
+
+	array_type ca1d(NZ);
+	array_type Tk1d(NZ);
+	array_type car1d(NZ);
+	array_type Tkr1d(NZ);
+	array_type carr1d(NZ);
+	array_type Tkrr1d(NZ);
+
+	matrix_type ca(NZ,y0);
+	matrix_type Tk(NZ,y0);
+	matrix_type Tkr(NZ,y0);
+	matrix_type Tkz(NZ,y0);
+	matrix_type car(NZ,y0);
+	matrix_type caz(NZ,y0);
+	matrix_type Tkrr(NZ,y0);
+	matrix_type Tkzz(NZ,y0);
+	matrix_type carr(NZ,y0);
+	matrix_type cazz(NZ,y0);
+	matrix_type cat(NZ,y0);
+	matrix_type Tkt(NZ,y0);
+
+	array_type y(2*NR*NZ);
+//
+	double dz = (1.0*ZL)/NZ;
+	for (int i=1; i<=NZ; i++)
+		z[i] = i*dz;
+
+	// Grid in radial direction
+	double dr = r0/(NR-1);
+
+	for (int j=0; j<NR; j++)
+		r[j] = j*dr;
+
+	double drs = dr*dr;
+
+	for (auto i = 0; i<NZ; i++) {
+		for (auto j = 0; j<NR; j++) {
+			int ij = i*NR + j;
+			ca[i][j] = u[ij];
+			Tk[i][j] = u[ij+NR*NZ];
+		}
+	}
+
+	//
+	// Step through the grid points in r and z
+	for (int i=0; i<NZ; i++) {
+		ca1d = ca[i];
+		Tk1d = Tk[i];
+
+//		//
+//		// car, Tkr
+		car1d=dss08(0.0,r0,NR,ca1d);
+		car[i]= car1d;
+		car[i][0]= 0.0;
+		car[i][NR-1]=0.0;
+//
+		Tkr1d=dss08(0.0,r0,NR,Tk1d);
+		Tkr[i] = Tkr1d;
+		Tkr[i][0]= 0.0;
+		Tkr[i][NR-1] = (h/k)*(Tw-Tk[i][NR-1]);
+
+		// carr, Tkrr
+//
+		car1d[0   ] = 0.0;
+		car1d[NR-1] = 0.0;
+//
+		double nl = 2.0;
+		double nu = 2.0;
+//
+		carr1d=dss48(0.0,r0,NR,ca1d,car1d,nl,nu);
+		carr[i] = carr1d;
+
+		Tkr1d[0]=0.0;
+		Tkr1d[NR-1] = (h/k)*(Tw-Tk1d[NR-1]);
+
+		nl=2;
+		nu=2;
+		Tkrr1d=dss48(0.0,r0,NR,Tk1d,Tkr1d,nl,nu);
+
+		Tkrr[i] = Tkrr1d;
+
+		for (int j=0; j<NR; j++) {
+//			//
+//			// (1/r)*car, (1/r)*Tkr
+			if(j != 0) {
+				car[i][j]=(1.0/r[j])*car[i][j];
+				Tkr[i][j]=(1.0/r[j])*Tkr[i][j];
+			}
+			if(j == 0)
+				carr[i][j] = 2.0*carr[i][j];
+			if(j == 0) {
+				Tkrr[i][j] = 2.0*Tkrr[i][j];
+			}
+//
+//			//
+//			// caz, Tkz
+			if (i == 0) {
+				caz[i][j]=(ca[i][j]-cae)/dz;
+				Tkz[i][j]=(Tk[i][j]-Tke)/dz;
+			}
+			else {
+				caz[i][j]=(ca[i][j]-ca[i-1][j])/dz;
+				Tkz[i][j]=(Tk[i][j]-Tk[i-1][j])/dz;
+			}
+
+//
+//			//
+//
+//			// PDEs
+			double rk=rk0*exp(-E/(R*Tk[i][j]))*(ca[i][j]*ca[i][j]);
+			cat[i][j]=Dc*(carr[i][j]+car[i][j])-v*caz[i][j]-rk;
+			Tkt[i][j]=Dt*(Tkrr[i][j]+Tkr[i][j])-v*Tkz[i][j]-(dH*rk)/(rho*Cp);
+		}
+	}
+
+
+	//2D to 1D matrices
+	for (int i=0; i<NZ; i++) {
+		for (int j=0; j<NR; j++) {
+			int ij= i*NR+j;
+			ut[ij]=cat[i][j];
+			ut[ij+NR*NZ]=Tkt[i][j];
+		}
+	}
+	//
+
+	cout<<ut;
 }
 
 int main(int argc, char **argv) {
@@ -270,7 +413,10 @@ int main(int argc, char **argv) {
 
 	    kr  = k0 exp(−E/(RTk))
 	*/
-	FuncPtr = difussion_pde_solution;
+	if (NDSS > 1)
+		FuncPtr = difussion_pde_solution_highOrder;
+	else
+		FuncPtr = difussion_pde_solution;
 
     //size_t steps = integrate( FuncPtr, u, 0.0 , 20.0, 0.1, streaming_observer( cout ));
     size_t steps = integrate( FuncPtr, u, 0.0 , 200.0 , 0.1, output_observer_append( fn ));
