@@ -284,12 +284,12 @@ void difussion_pde_solution_highOrder (const array_type &u , array_type &ut , co
 
 //		//
 //		// car, Tkr
-		car1d=dss08(0.0,r0,NR,ca1d);
+		car1d=dss04(0.0,r0,NR,ca1d);
 		car[i]= car1d;
 		car[i][0]= 0.0;
 		car[i][NR-1]=0.0;
 //
-		Tkr1d=dss08(0.0,r0,NR,Tk1d);
+		Tkr1d=dss04(0.0,r0,NR,Tk1d);
 		Tkr[i] = Tkr1d;
 		Tkr[i][0]= 0.0;
 		Tkr[i][NR-1] = (h/k)*(Tw-Tk[i][NR-1]);
@@ -302,7 +302,7 @@ void difussion_pde_solution_highOrder (const array_type &u , array_type &ut , co
 		double nl = 2.0;
 		double nu = 2.0;
 //
-		carr1d=dss48(0.0,r0,NR,ca1d,car1d,nl,nu);
+		carr1d=dss44(0.0,r0,NR,ca1d,car1d,nl,nu);
 		carr[i] = carr1d;
 
 		Tkr1d[0]=0.0;
@@ -310,7 +310,7 @@ void difussion_pde_solution_highOrder (const array_type &u , array_type &ut , co
 
 		nl=2;
 		nu=2;
-		Tkrr1d=dss48(0.0,r0,NR,Tk1d,Tkr1d,nl,nu);
+		Tkrr1d=dss44(0.0,r0,NR,Tk1d,Tkr1d,nl,nu);
 
 		Tkrr[i] = Tkrr1d;
 
